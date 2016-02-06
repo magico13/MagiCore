@@ -567,7 +567,7 @@ namespace MagiCore
                 if (s == ')') depth--;
 
                 if (s == ':' && depth == 0)
-                    indexOfColon = j;
+                    indexOfColon = i;
 
                 if (depth < 0)
                     break;
@@ -586,7 +586,7 @@ namespace MagiCore
                 case ">=": selectedOption = val1 >= val2 ? leftOption : rightOption; break;
                 case "==": selectedOption = val1 == val2 ? leftOption : rightOption; break;
                 case "!=": selectedOption = val1 != val2 ? leftOption : rightOption; break;
-                default: selectedOption = leftOption;
+                default: selectedOption = leftOption; break;
             }
 
             val = ParseMath(selectedOption, null);
