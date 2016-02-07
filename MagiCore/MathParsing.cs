@@ -8,6 +8,28 @@ namespace MagiCore
     public class MathParsing
     {
         /// <summary>
+        /// Replace all instances of variables with their provided values
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="variables"></param>
+        /// <returns></returns>
+        public static string ReplaceMathVariables(string input, Dictionary<string, string> variables)
+        {
+            string cpy = input;
+            if (variables != null)
+            {
+                foreach (KeyValuePair<string, string> kvp in variables)
+                {
+                    if (cpy.Contains("[" + kvp.Key + "]"))
+                    {
+                        cpy = cpy.Replace("[" + kvp.Key + "]", kvp.Value);
+                    }
+                }
+            }
+            return cpy;
+        }
+
+        /// <summary>
         /// Takes a string and evaluates it as a mathematical expression, replacing any variables "ie, [X]" with the provided values
         /// </summary>
         /// <param name="input"></param>
@@ -15,17 +37,7 @@ namespace MagiCore
         /// <returns></returns>
         public static double ParseMath(string input, Dictionary<string, string> variables)
         {
-            string raw = input;
-            if (variables != null)
-            {
-                foreach (KeyValuePair<string, string> kvp in variables)
-                {
-                    if (input.Contains("[" + kvp.Key + "]"))
-                    {
-                        input = input.Replace("[" + kvp.Key + "]", kvp.Value);
-                    }
-                }
-            }
+            ReplaceMathVariables(input, variables);
 
             double currentVal = 0;
             string stack = "";

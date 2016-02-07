@@ -238,6 +238,26 @@ namespace MagiCore
             }
             return time;
         }
+
+        /// <summary>
+        /// Adds a value to the dictionary if it does not exist, or replaces the current value with the new one
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="dict"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        public static void AddOrReplaceInDictionary<T, V> (Dictionary<T, V> dict, T key, V value)
+        {
+            if (!dict.ContainsKey(key))
+            {
+                dict.Add(key, value);
+            }
+            else
+            {
+                dict[key] = value;
+            }
+        }
     }
 }
     
