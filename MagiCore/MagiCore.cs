@@ -43,26 +43,37 @@ namespace MagiCore
         /// </summary>
         /// <param name="time">Time in seconds</param>
         /// <returns></returns>
-        public static string GetFormattedTime(double time)
+        public static string GetFormattedTime(double time, bool skipZeroes=false)
         {
             if (time > 0)
             {
+                double t;
                 StringBuilder formatedTime = new StringBuilder();
                 if (GameSettings.KERBIN_TIME)
                 {
-                    formatedTime.AppendFormat("{0,2:0} days, ", Math.Floor(time / 21600));
+                    t = Math.Floor(time / 21600);
+                    if (!skipZeroes || t > 0)
+                        formatedTime.AppendFormat("{0,2:0} days ", t);
                     time = time % 21600;
                 }
                 else
                 {
-                    formatedTime.AppendFormat("{0,2:0} days, ", Math.Floor(time / 86400));
+                    t = Math.Floor(time / 86400);
+                    if (!skipZeroes || t > 0)
+                        formatedTime.AppendFormat("{0,2:0} days ", t);
                     time = time % 86400;
                 }
-                formatedTime.AppendFormat("{0,2:0} hours, ", Math.Floor(time / 3600));
+                t = Math.Floor(time / 3600);
+                if (!skipZeroes || t > 0)
+                    formatedTime.AppendFormat("{0,2:0} hours ", t);
                 time = time % 3600;
-                formatedTime.AppendFormat("{0,2:0} minutes, ", Math.Floor(time / 60));
+                t = Math.Floor(time / 60);
+                if (!skipZeroes || t > 0)
+                    formatedTime.AppendFormat("{0,2:0} minutes ", t);
                 time = time % 60;
-                formatedTime.AppendFormat("{0,2:0} seconds", time);
+
+                if (!skipZeroes || time > 0)
+                    formatedTime.AppendFormat("{0,2:0} seconds", time);
 
                 return formatedTime.ToString();
             }
