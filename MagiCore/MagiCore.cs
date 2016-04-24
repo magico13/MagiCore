@@ -25,10 +25,10 @@ namespace MagiCore
         {
             double time = UT;
             int[] ret = { 0, 0, 0, 0, 0 };
-            ret[0] = (int)Math.Floor(time / (KSPUtil.Year)) + 1; //year
-            time %= (KSPUtil.Year);
-            ret[1] = (int)Math.Floor(time / KSPUtil.Day) + 1; //days
-            time %= (KSPUtil.Day);
+            ret[0] = (int)Math.Floor(time / (KSPUtil.dateTimeFormatter.Year)) + 1; //year
+            time %= (KSPUtil.dateTimeFormatter.Year);
+            ret[1] = (int)Math.Floor(time / KSPUtil.dateTimeFormatter.Day) + 1; //days
+            time %= (KSPUtil.dateTimeFormatter.Day);
             ret[2] = (int)Math.Floor(time / (3600)); //hours
             time %= (3600);
             ret[3] = (int)Math.Floor(time / (60)); //minutes
@@ -128,17 +128,25 @@ namespace MagiCore
         public static double ParseTimeString(string timeString, bool toUT = true)
         {
             //if it doesn't contain colons, we assume it's not colon formatted
-            if (timeString.Contains(":"))
+            timeString = timeString.ToLower();
+            try
             {
-                return ParseColonFormattedTime(timeString, toUT);
+                if (timeString.Contains(":"))
+                {
+                    return ParseColonFormattedTime(timeString, toUT);
+                }
+                else if (timeString.Contains("s") || timeString.Contains("m") || timeString.Contains("h") || timeString.Contains("d") || timeString.Contains("y"))
+                {
+                    return ParseCommonFormattedTime(timeString, toUT);
+                }
+                else
+                {
+                    return double.Parse(timeString);
+                }
             }
-            else if (timeString.Contains("s") || timeString.Contains("m") || timeString.Contains("h") || timeString.Contains("d") || timeString.Contains("y"))
+            catch
             {
-                return ParseCommonFormattedTime(timeString, toUT);
-            }
-            else
-            {
-                return double.Parse(timeString);
+                return 0;
             }
 
         }
