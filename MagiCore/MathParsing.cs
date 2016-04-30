@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace MagiCore
 {
@@ -37,7 +38,7 @@ namespace MagiCore
         /// <returns></returns>
         public static double ParseMath(string input, Dictionary<string, string> variables)
         {
-            ReplaceMathVariables(input, variables);
+            input = ReplaceMathVariables(input, variables);
 
             double currentVal = 0;
             string stack = "";
@@ -237,6 +238,8 @@ namespace MagiCore
             string[] conditionals = { "<", ">", "<=", ">=", "==", "!=" }; //do we want to support && and ||, too? Ideally yes, but it's way tougher
             double val = 0.0;
 
+           // Debug.Log("MagiCore: Statement = " + statement);
+
             int indexOfQMark = statement.IndexOf("?");
             string conditionalSection = statement.Substring(0, indexOfQMark);
             //string[] condSides = conditionalSection.Split(conditionals, StringSplitOptions.RemoveEmptyEntries);
@@ -244,7 +247,7 @@ namespace MagiCore
                 conditionalSection = conditionalSection.Replace(conditional, ";" + conditional + ";");
             string[] parts = conditionalSection.Split(';');
             //this is a kind of horrible method that I got from here, but avoided excessive regex: http://stackoverflow.com/a/2484982
-
+            
             //lets assume there are only three elements
             if (parts.Length < 3)
                 return 0.0;
@@ -254,6 +257,9 @@ namespace MagiCore
             //compare them
             double val1 = ParseMath(parts[0], null);
             double val2 = ParseMath(parts[2], null);
+
+           // Debug.Log("MagiCore: val1 = " + val1);
+           // Debug.Log("MagiCore: val2 = " + val2);
 
             int indexOfColon = indexOfQMark;
             int depth = 0;
@@ -270,8 +276,11 @@ namespace MagiCore
                     break;
             }
 
-            string leftOption = statement.Substring(indexOfQMark + 1, indexOfColon - indexOfQMark);//starts at "?" and ends at last ":" for this depth
+            string leftOption = statement.Substring(indexOfQMark + 1, indexOfColon - indexOfQMark - 1);//starts at "?" and ends at last ":" for this depth
             string rightOption = statement.Substring(indexOfColon + 1); //starts at last ":" and ends at end of statment
+
+           // Debug.Log("MagiCore: left option = " + leftOption);
+           // Debug.Log("MagiCore: right option = " + rightOption);
 
             string selectedOption = "";
 
