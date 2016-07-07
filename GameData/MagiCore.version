@@ -14,10 +14,16 @@
         "REPOSITORY":"MagiCore",
         "ALLOW_PRE_RELEASE":false,
     },
-    "KSP_VERSION":
+    "KSP_VERSION_MIN":
 	{
         "MAJOR":1,
         "MINOR":1,
         "PATCH":2
+     },
+    "KSP_VERSION_MAX":
+	{
+        "MAJOR":1,
+        "MINOR":1,
+        "PATCH":3
      }
 }
