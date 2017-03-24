@@ -142,8 +142,8 @@ namespace MagiCore
                     else if (function == "max" || function == "min")
                     {
                         string[] parts = new string[2];
-                        parts[0] = input.Substring(subStart, parenComma[1] - subStart);
-                        parts[1] = input.Substring(parenComma[1] + 1, j - parenComma[1] - 1);
+                        parts[0] = input.Substring(subStart, comma - subStart);
+                        parts[1] = input.Substring(comma + 1, j - comma - 1);
                         double sub1 = ParseMath(null, parts[0], null);
                         double sub2 = ParseMath(null, parts[1], null);
                         if (function == "max")
