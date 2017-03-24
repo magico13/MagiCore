@@ -25,8 +25,8 @@ namespace MagiCore
             {
                 foreach (KeyValuePair<string, string> kvp in variables)
                 {
-                    if (cpy.Contains("[" + kvp.Key + "]"))
-                    {
+                    if (!string.IsNullOrEmpty(kvp.Key))
+                    { 
                         cpy = cpy.Replace("[" + kvp.Key + "]", kvp.Value);
                     }
                 }
