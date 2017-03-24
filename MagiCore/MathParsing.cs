@@ -11,11 +11,15 @@ namespace MagiCore
         /// <summary>
         /// Replace all instances of variables with their provided values
         /// </summary>
-        /// <param name="input"></param>
-        /// <param name="variables"></param>
-        /// <returns></returns>
-        public static string ReplaceMathVariables(string input, Dictionary<string, string> variables)
+        /// <param name="identifier">An identifier for the string</param>
+        /// <param name="input">The string to replace variables on</param>
+        /// <param name="variables">The Dictionary containing the variables and their values</param>
+        /// <returns>A string with the variables replaced</returns>
+        public static string ReplaceMathVariables(string identifier, string input, Dictionary<string, string> variables)
         {
+            //raise an event to allow other mods to add variables
+            EventBehaviour.onMCVariableReplacing.Fire(identifier, variables);
+
             string cpy = input;
             if (variables != null)
             {
@@ -33,12 +37,16 @@ namespace MagiCore
         /// <summary>
         /// Takes a string and evaluates it as a mathematical expression, replacing any variables "ie, [X]" with the provided values
         /// </summary>
-        /// <param name="input"></param>
-        /// <param name="variables"></param>
-        /// <returns></returns>
-        public static double ParseMath(string input, Dictionary<string, string> variables)
+        /// <param name="identifier">An identifier for the string</param>
+        /// <param name="input">The string to evaluate</param>
+        /// <param name="variables">The Dictionary containing the variables and their values</param>
+        /// <returns>The result of the evaluation</returns>
+        public static double ParseMath(string identifier, string input, Dictionary<string, string> variables)
         {
-            input = ReplaceMathVariables(input, variables);
+            if (identifier != null) //recursive calls will pass null to avoid firing the events
+            {
+                input = ReplaceMathVariables(identifier, input, variables);
+            }
 
             double currentVal = 0;
             string stack = "";
@@ -85,7 +93,7 @@ namespace MagiCore
                                 break;
                         }
                         string sub = input.Substring(i + 1, index - i - 1);
-                        double exp = ParseMath(sub, variables);
+                        double exp = ParseMath(null, sub, null);
                         double newVal = double.Parse(stack) * Math.Pow(10, exp);
                         currentVal = DoMath(currentVal, lastOp, newVal.ToString());
                         stack = "0";
@@ -96,7 +104,7 @@ namespace MagiCore
                     {
                         int j = FindEndParenthesis(input, i)[0];
                         string sub = input.Substring(i + 1, j - i - 1);
-                        string val = ParseMath(sub, variables).ToString();
+                        string val = ParseMath(null, sub, null).ToString();
                         input = input.Substring(0, i) + val + input.Substring(j + 1);
                         --i;
                     }
@@ -123,12 +131,12 @@ namespace MagiCore
                     }
                     else if (function == "l")
                     {
-                        val = ParseMath(sub, variables);
+                        val = ParseMath(null, sub, null);
                         val = Math.Log(val);
                     }
                     else if (function == "L")
                     {
-                        val = ParseMath(sub, variables);
+                        val = ParseMath(null, sub, null);
                         val = Math.Log10(val);
                     }
                     else if (function == "max" || function == "min")
@@ -136,8 +144,8 @@ namespace MagiCore
                         string[] parts = new string[2];
                         parts[0] = input.Substring(subStart, parenComma[1] - subStart);
                         parts[1] = input.Substring(parenComma[1] + 1, j - parenComma[1] - 1);
-                        double sub1 = ParseMath(parts[0], variables);
-                        double sub2 = ParseMath(parts[1], variables);
+                        double sub1 = ParseMath(null, parts[0], null);
+                        double sub2 = ParseMath(null, parts[1], null);
                         if (function == "max")
                             val = Math.Max(sub1, sub2);
                         else if (function == "min")
@@ -145,7 +153,7 @@ namespace MagiCore
                     }
                     else if (function == "sign")
                     {
-                        val = ParseMath(sub, variables);
+                        val = ParseMath(null, sub, null);
                         if (val >= 0)
                             val = 1;
                         else
@@ -153,7 +161,7 @@ namespace MagiCore
                     }
                     else if (function == "abs")
                     {
-                        val = ParseMath(sub, variables);
+                        val = ParseMath(null, sub, null);
                         val = Math.Abs(val);
                     }
 
@@ -172,9 +180,9 @@ namespace MagiCore
         /// <summary>
         /// Locates the terminating paranthesis for the given position. Also finds the location of any commas (for max, min, etc)
         /// </summary>
-        /// <param name="str"></param>
-        /// <param name="curPos"></param>
-        /// <returns></returns>
+        /// <param name="str">The string to search</param>
+        /// <param name="curPos">The current position in the string</param>
+        /// <returns>An int[2] of the end position and the location of any appropriate comma.</returns>
         private static int[] FindEndParenthesis(string str, int curPos)
         {
             int depth = 0;
@@ -198,10 +206,10 @@ namespace MagiCore
         /// <summary>
         /// Takes the current value and performs the requested operation on it
         /// </summary>
-        /// <param name="currentVal"></param>
-        /// <param name="operation"></param>
-        /// <param name="newVal"></param>
-        /// <returns></returns>
+        /// <param name="currentVal">The current value</param>
+        /// <param name="operation">The operation to perform</param>
+        /// <param name="newVal">The new value string to "add" to the current value</param>
+        /// <returns>The new value after the operation</returns>
         private static double DoMath(double currentVal, string operation, string newVal)
         {
             double newValue = 0;
@@ -229,8 +237,8 @@ namespace MagiCore
         /// <summary>
         /// Performs parsing of inline if statements
         /// </summary>
-        /// <param name="statement"></param>
-        /// <returns></returns>
+        /// <param name="statement">The statement string to act on</param>
+        /// <returns>The result of the if statement</returns>
         private static double DoIfStatement(string statement)
         {
             //At this point "statement" would look something like a < b ? stuff : other stuff
@@ -255,8 +263,8 @@ namespace MagiCore
             //do math on part one
             //do math on part two
             //compare them
-            double val1 = ParseMath(parts[0], null);
-            double val2 = ParseMath(parts[2], null);
+            double val1 = ParseMath(null, parts[0], null);
+            double val2 = ParseMath(null, parts[2], null);
 
            // Debug.Log("MagiCore: val1 = " + val1);
            // Debug.Log("MagiCore: val2 = " + val2);
@@ -295,7 +303,7 @@ namespace MagiCore
                 default: selectedOption = leftOption; break;
             }
 
-            val = ParseMath(selectedOption, null);
+            val = ParseMath(null, selectedOption, null);
 
             return val;
         }

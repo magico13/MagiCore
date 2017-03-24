@@ -10,7 +10,7 @@ namespace MagiCore
     {
         public static Version GetVersion()
         {
-            return new Version(1, 1, 3, 0);
+            return new Version(1, 2, 0, 0);
         }
     }
 
@@ -19,8 +19,8 @@ namespace MagiCore
         /// <summary>
         /// Takes a time and splits it into an integer array describing the number of years, days, hours, minutes, seconds
         /// </summary>
-        /// <param name="UT"></param>
-        /// <returns></returns>
+        /// <param name="UT">The time to convert</param>
+        /// <returns>An integer array of each time part</returns>
         public static int[] ConvertUT(double UT)
         {
             double time = UT;
@@ -42,7 +42,8 @@ namespace MagiCore
         /// Formats a string from a time value into X days, X hours, X minutes, and X seconds.
         /// </summary>
         /// <param name="time">Time in seconds</param>
-        /// <returns></returns>
+        /// <param name="skipZeroes">If true, skips any zero values. Default false.</param>
+        /// <returns>The formatted time</returns>
         public static string GetFormattedTime(double time, bool skipZeroes=false)
         {
             if (time > 0)
@@ -87,8 +88,8 @@ namespace MagiCore
         /// <summary>
         /// Formats a time in "colon format" such as "1:23:45:54"
         /// </summary>
-        /// <param name="time"></param>
-        /// <returns></returns>
+        /// <param name="time">The time to format</param>
+        /// <returns>The formatted time</returns>
         public static string GetColonFormattedTime(double time)
         {
             if (time > 0)
@@ -120,10 +121,10 @@ namespace MagiCore
 
 
         /// <summary>
-        /// Converts a string containing time elements to a UT
+        /// Converts a string containing time elements to a UT or timespan
         /// </summary>
-        /// <param name="timeString"></param>
-        /// <param name="toUT"></param>
+        /// <param name="timeString">The string to parse</param>
+        /// <param name="toUT">If true, converts to a UT rather than a timespan. Default true.</param>
         /// <returns>Time in seconds</returns>
         public static double ParseTimeString(string timeString, bool toUT = true)
         {
@@ -141,7 +142,12 @@ namespace MagiCore
                 }
                 else
                 {
-                    return double.Parse(timeString);
+                    double time;
+                    if (double.TryParse(timeString, out time))
+                    {
+                        return time;
+                    }
+                    return 0;
                 }
             }
             catch
@@ -154,9 +160,9 @@ namespace MagiCore
         /// <summary>
         /// Takes a string with qualifiers like y, d, h, m, s and converts it to seconds
         /// </summary>
-        /// <param name="timeString"></param>
-        /// <param name="toUT"></param>
-        /// <returns></returns>
+        /// <param name="timeString">The string to parse</param>
+        /// <param name="toUT">If true, converts to a UT rather than a timespan. Default true.</param>
+        /// <returns>Time in seconds</returns>
         public static double ParseCommonFormattedTime(string timeString, bool toUT = true)
         {
             //parses strings like "12d 14h 32m" or "3y8d"
@@ -220,9 +226,9 @@ namespace MagiCore
         /// <summary>
         /// Takes a colon formatted time string ("1:23:45:54") and converts it to seconds
         /// </summary>
-        /// <param name="timeString"></param>
-        /// <param name="toUT"></param>
-        /// <returns></returns>
+        /// <param name="timeString">The string to parse</param>
+        /// <param name="toUT">If true, converts to a UT rather than a timespan. Default true.</param>
+        /// <returns>Time in seconds</returns>
         public static double ParseColonFormattedTime(string timeString, bool toUT = true)
         {
             //toUT is for converting a string that is given as a formatted UT (Starting with Y1, D1)
@@ -256,26 +262,6 @@ namespace MagiCore
                 time = -1;
             }
             return time;
-        }
-
-        /// <summary>
-        /// Adds a value to the dictionary if it does not exist, or replaces the current value with the new one
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="V"></typeparam>
-        /// <param name="dict"></param>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        public static void AddOrReplaceInDictionary<T, V> (Dictionary<T, V> dict, T key, V value)
-        {
-            if (!dict.ContainsKey(key))
-            {
-                dict.Add(key, value);
-            }
-            else
-            {
-                dict[key] = value;
-            }
         }
     }
 }

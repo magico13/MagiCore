@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigNodeUtils.cs" />
+    <Compile Include="EventBehaviour.cs" />
     <Compile Include="MagiCore.cs" />
     <Compile Include="MathParsing.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
