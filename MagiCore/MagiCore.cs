@@ -10,7 +10,7 @@ namespace MagiCore
     {
         public static Version GetVersion()
         {
-            return new Version(1, 2, 0, 0);
+            return new Version(1, 2, 1, 0);
         }
     }
 
@@ -29,10 +29,10 @@ namespace MagiCore
             time %= (KSPUtil.dateTimeFormatter.Year);
             ret[1] = (int)Math.Floor(time / KSPUtil.dateTimeFormatter.Day) + 1; //days
             time %= (KSPUtil.dateTimeFormatter.Day);
-            ret[2] = (int)Math.Floor(time / (3600)); //hours
-            time %= (3600);
-            ret[3] = (int)Math.Floor(time / (60)); //minutes
-            time %= (60);
+            ret[2] = (int)Math.Floor(time / (KSPUtil.dateTimeFormatter.Hour)); //hours
+            time %= (KSPUtil.dateTimeFormatter.Hour);
+            ret[3] = (int)Math.Floor(time / (KSPUtil.dateTimeFormatter.Minute)); //minutes
+            time %= (KSPUtil.dateTimeFormatter.Minute);
             ret[4] = (int)Math.Floor(time); //seconds
 
             return ret;
@@ -50,28 +50,18 @@ namespace MagiCore
             {
                 double t;
                 StringBuilder formatedTime = new StringBuilder();
-                if (GameSettings.KERBIN_TIME)
-                {
-                    t = Math.Floor(time / 21600);
-                    if (!skipZeroes || t > 0)
-                        formatedTime.AppendFormat("{0,2:0} days ", t);
-                    time = time % 21600;
-                }
-                else
-                {
-                    t = Math.Floor(time / 86400);
-                    if (!skipZeroes || t > 0)
-                        formatedTime.AppendFormat("{0,2:0} days ", t);
-                    time = time % 86400;
-                }
-                t = Math.Floor(time / 3600);
+                t = Math.Floor(time / KSPUtil.dateTimeFormatter.Day);
+                if (!skipZeroes || t > 0)
+                    formatedTime.AppendFormat("{0,2:0} days ", t);
+                time = time % KSPUtil.dateTimeFormatter.Day;
+                t = Math.Floor(time / KSPUtil.dateTimeFormatter.Hour);
                 if (!skipZeroes || t > 0)
                     formatedTime.AppendFormat("{0,2:0} hours ", t);
-                time = time % 3600;
-                t = Math.Floor(time / 60);
+                time = time % KSPUtil.dateTimeFormatter.Hour;
+                t = Math.Floor(time / KSPUtil.dateTimeFormatter.Minute);
                 if (!skipZeroes || t > 0)
                     formatedTime.AppendFormat("{0,2:0} minutes ", t);
-                time = time % 60;
+                time = time % KSPUtil.dateTimeFormatter.Minute;
 
                 if (!skipZeroes || time > 0)
                     formatedTime.AppendFormat("{0,2:0} seconds", time);
@@ -95,20 +85,12 @@ namespace MagiCore
             if (time > 0)
             {
                 StringBuilder formatedTime = new StringBuilder();
-                if (GameSettings.KERBIN_TIME)
-                {
-                    formatedTime.AppendFormat("{0,2:00}:", Math.Floor(time / 21600));
-                    time = time % 21600;
-                }
-                else
-                {
-                    formatedTime.AppendFormat("{0,2:00}:", Math.Floor(time / 86400));
-                    time = time % 86400;
-                }
-                formatedTime.AppendFormat("{0,2:00}:", Math.Floor(time / 3600));
-                time = time % 3600;
-                formatedTime.AppendFormat("{0,2:00}:", Math.Floor(time / 60));
-                time = time % 60;
+                formatedTime.AppendFormat("{0,2:00}:", Math.Floor(time / KSPUtil.dateTimeFormatter.Day));
+                time = time % KSPUtil.dateTimeFormatter.Day;
+                formatedTime.AppendFormat("{0,2:00}:", Math.Floor(time / KSPUtil.dateTimeFormatter.Hour));
+                time = time % KSPUtil.dateTimeFormatter.Hour;
+                formatedTime.AppendFormat("{0,2:00}:", Math.Floor(time / KSPUtil.dateTimeFormatter.Minute));
+                time = time % KSPUtil.dateTimeFormatter.Minute;
                 formatedTime.AppendFormat("{0,2:00}", time);
 
                 return formatedTime.ToString();
@@ -170,8 +152,8 @@ namespace MagiCore
             timeString = timeString.ToLower(); //make sure everything is lowercase
             string[] parts = Regex.Split(timeString, "([a-z])");//split on characters (should also include the character as the next element of the array)
             int len = parts.Length;
-            double sPerDay = GameSettings.KERBIN_TIME ? 6 * 3600 : 24 * 3600;
-            double sPerYear = GameSettings.KERBIN_TIME ? 426 * sPerDay : 365 * sPerDay;
+            double sPerDay = KSPUtil.dateTimeFormatter.Day;
+            double sPerYear = KSPUtil.dateTimeFormatter.Year;
 
             //loop over all the elements, if it's y,d,h,m,s then take the previous element as the number
             if (len > 1)
@@ -235,8 +217,8 @@ namespace MagiCore
             double time = -1;
             string[] parts = timeString.Split(':');
             int len = parts.Length;
-            double sPerDay = GameSettings.KERBIN_TIME ? 6 * 3600 : 24 * 3600;
-            double sPerYear = GameSettings.KERBIN_TIME ? 426 * sPerDay : 365 * sPerDay;
+            double sPerDay = KSPUtil.dateTimeFormatter.Day;
+            double sPerYear = KSPUtil.dateTimeFormatter.Year;
             try
             {
                 time = double.Parse(parts[len - 1]);
