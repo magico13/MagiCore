@@ -277,8 +277,8 @@ namespace MagiCore
             double val1 = 0;
             double val2 = 0;
 
-            string val1S = parts[0];
-            string val2S = parts[1];
+            string val1S = parts[0].Trim();
+            string val2S = parts[1].Trim();
 
             if (mathConditionals.Contains(condition))
             {
