@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using UnityEngine;
+using System.Text.RegularExpressions;
 
 namespace MagiCore
 {
@@ -17,6 +16,8 @@ namespace MagiCore
         /// <returns>A string with the variables replaced</returns>
         public static string ReplaceMathVariables(string identifier, string input, Dictionary<string, string> variables)
         {
+            if (variables?.ContainsKey("true") == false) variables["true"] = "1";
+            if (variables?.ContainsKey("false") == false) variables["false"] = "0";
             //raise an event to allow other mods to add variables
             EventBehaviour.onMCVariableReplacing.Fire(identifier, variables);
 
@@ -30,6 +31,13 @@ namespace MagiCore
                         cpy = cpy.Replace("[" + kvp.Key + "]", kvp.Value);
                     }
                 }
+
+                //we also replace "true" and "false" with 1 and 0, but only if they are the word by themselves
+                Regex trueReplace = new Regex(@"\btrue\b");
+                cpy = trueReplace.Replace(cpy, variables["true"]);
+
+                Regex falseReplace = new Regex(@"\bfalse\b");
+                cpy = falseReplace.Replace(cpy, variables["false"]);
             }
             return cpy;
         }
@@ -52,7 +60,7 @@ namespace MagiCore
             string stack = "";
             string lastOp = "+";
             string[] ops = { "+", "-", "*", "/", "%", "^", "(", "e", "E" };
-            string[] functions = { "min", "max", "l", "L", "abs", "sign", "if" }; //if (a < b ? stuff : other stuff)
+            string[] functions = { "min", "max", "l", "ln", "L", "log", "abs", "sign", "if" }; //if (a < b ? stuff : other stuff)
             for (int i = 0; i < input.Length; ++i)
             {
                 string ch = input[i].ToString();
@@ -129,12 +137,12 @@ namespace MagiCore
                     {
                         val = DoIfStatement(sub);
                     }
-                    else if (function == "l")
+                    else if (function == "l" || function == "ln")
                     {
                         val = ParseMath(null, sub, null);
                         val = Math.Log(val);
                     }
-                    else if (function == "L")
+                    else if (function == "L" || function == "log")
                     {
                         val = ParseMath(null, sub, null);
                         val = Math.Log10(val);
@@ -243,7 +251,10 @@ namespace MagiCore
         {
             //At this point "statement" would look something like a < b ? stuff : other stuff
             //We need to grab the conditional and the two possible values, then do the conditional and evaluate the correct value
-            string[] conditionals = { "<", ">", "<=", ">=", "==", "!=" }; //do we want to support && and ||, too? Ideally yes, but it's way tougher
+            string[] mathConditionals = { "<", ">", "<=", ">=", "==", "!=" }; //do we want to support && and ||, too? Ideally yes, but it's way tougher
+            string[] stringConditionals = { "seq", "sneq" };
+
+            string[] conditionals = mathConditionals.Concat(stringConditionals).ToArray();
             double val = 0.0;
 
            // Debug.Log("MagiCore: Statement = " + statement);
@@ -260,12 +271,23 @@ namespace MagiCore
             if (parts.Length < 3)
                 return 0.0;
 
-            //do math on part one
-            //do math on part two
-            //compare them
-            double val1 = ParseMath(null, parts[0], null);
-            double val2 = ParseMath(null, parts[2], null);
+            //check that we aren't doing string comparisons, if so then we don't parse math on val1 or val2
 
+            string condition = parts[1];
+            double val1 = 0;
+            double val2 = 0;
+
+            string val1S = parts[0];
+            string val2S = parts[1];
+
+            if (mathConditionals.Contains(condition))
+            {
+                //do math on part one
+                //do math on part two
+                //compare them
+                val1 = ParseMath(null, parts[0], null);
+                val2 = ParseMath(null, parts[2], null);
+            }
            // Debug.Log("MagiCore: val1 = " + val1);
            // Debug.Log("MagiCore: val2 = " + val2);
 
@@ -292,7 +314,7 @@ namespace MagiCore
 
             string selectedOption = "";
 
-            switch (parts[1])
+            switch (condition)
             {
                 case "<": selectedOption = val1 < val2 ? leftOption : rightOption; break;
                 case ">": selectedOption = val1 > val2 ? leftOption : rightOption; break;
@@ -300,6 +322,8 @@ namespace MagiCore
                 case ">=": selectedOption = val1 >= val2 ? leftOption : rightOption; break;
                 case "==": selectedOption = val1 == val2 ? leftOption : rightOption; break;
                 case "!=": selectedOption = val1 != val2 ? leftOption : rightOption; break;
+                case "seq": selectedOption = string.Equals(val1S, val2S, StringComparison.Ordinal) ? leftOption : rightOption; break;
+                case "sneq": selectedOption = !string.Equals(val1S, val2S, StringComparison.Ordinal) ? leftOption : rightOption; break;
                 default: selectedOption = leftOption; break;
             }
 

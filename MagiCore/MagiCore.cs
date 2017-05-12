@@ -10,7 +10,7 @@ namespace MagiCore
     {
         public static Version GetVersion()
         {
-            return new Version(1, 2, 1, 0);
+            return new Version(1, 2, 2, 0);
         }
     }
 
