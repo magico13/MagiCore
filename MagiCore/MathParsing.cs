@@ -252,7 +252,7 @@ namespace MagiCore
             //At this point "statement" would look something like a < b ? stuff : other stuff
             //We need to grab the conditional and the two possible values, then do the conditional and evaluate the correct value
             string[] mathConditionals = { "<", ">", "<=", ">=", "==", "!=" }; //do we want to support && and ||, too? Ideally yes, but it's way tougher
-            string[] stringConditionals = { "seq", "sneq" };
+            string[] stringConditionals = { " seq ", " sneq " };
 
             string[] conditionals = mathConditionals.Concat(stringConditionals).ToArray();
             double val = 0.0;
@@ -273,7 +273,7 @@ namespace MagiCore
 
             //check that we aren't doing string comparisons, if so then we don't parse math on val1 or val2
 
-            string condition = parts[1];
+            string condition = parts[1].Trim();
             double val1 = 0;
             double val2 = 0;
 
