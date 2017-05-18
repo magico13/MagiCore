@@ -187,7 +187,7 @@ namespace MagiCore
             }
             catch (Exception ex)
             {
-                MagiCore.LogException(ex, string.Format("Exception encountered while parsing '{0}'. Current value: '{1}' Stack: {2}", input, currentVal, stack));
+                MagiCore.LogException(ex, string.Format("Exception encountered while parsing '{0}' : '{1}'. Current value: '{2}' Stack: {3}", identifier, input, currentVal, stack));
                 currentVal = 0;
             }
             return currentVal;
