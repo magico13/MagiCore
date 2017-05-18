@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using UnityEngine;
 
 namespace MagiCore
 {
@@ -10,7 +9,18 @@ namespace MagiCore
     {
         public static Version GetVersion()
         {
-            return new Version(1, 2, 3, 0);
+            return new Version(1, 2, 4, 0);
+        }
+
+        internal static void Log(object msg)
+        {
+            Debug.Log("[MagiCore] " + msg.ToString());
+        }
+
+        internal static void LogException(Exception ex, string message)
+        {
+            Log(message);
+            Debug.LogException(ex);
         }
     }
 

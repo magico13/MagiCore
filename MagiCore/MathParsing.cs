@@ -51,137 +51,145 @@ namespace MagiCore
         /// <returns>The result of the evaluation</returns>
         public static double ParseMath(string identifier, string input, Dictionary<string, string> variables)
         {
-            if (identifier != null) //recursive calls will pass null to avoid firing the events
-            {
-                input = ReplaceMathVariables(identifier, input, variables);
-            }
-
             double currentVal = 0;
             string stack = "";
-            string lastOp = "+";
-            string[] ops = { "+", "-", "*", "/", "%", "^", "(", "e", "E" };
-            string[] functions = { "min", "max", "l", "ln", "L", "log", "abs", "sign", "if" }; //if (a < b ? stuff : other stuff)
-            for (int i = 0; i < input.Length; ++i)
+            try
             {
-                string ch = input[i].ToString();
-                bool isOp = false, isFunction = false;
-                foreach (string op in ops)
+                if (identifier != null) //recursive calls will pass null to avoid firing the events
                 {
-                    if (op == ch)
-                    {
-                        isOp = true;
-                        break;
-                    }
+                    input = ReplaceMathVariables(identifier, input, variables);
                 }
-                if (!isOp)
+                
+                string lastOp = "+";
+                string[] ops = { "+", "-", "*", "/", "%", "^", "(", "e", "E" };
+                string[] functions = { "min", "max", "l", "ln", "L", "log", "abs", "sign", "if" }; //if (a < b ? stuff : other stuff)
+                for (int i = 0; i < input.Length; ++i)
                 {
-                    foreach (string fun in functions)
+                    string ch = input[i].ToString();
+                    bool isOp = false, isFunction = false;
+                    foreach (string op in ops)
                     {
-                        if (fun[0] == input[i])
+                        if (op == ch)
                         {
-                            isFunction = true;
+                            isOp = true;
                             break;
                         }
                     }
-                }
-
-                if (isOp)
-                {
-                    if (ch == "-" && (stack.Trim() == ""))
+                    if (!isOp)
                     {
-                        stack += ch;
-                    }
-                    else if (ch == "e" || ch == "E")
-                    {
-                        int index;
-                        for (index = i + 2; index < input.Length; ++index)
+                        foreach (string fun in functions)
                         {
-                            string ch2 = input[index].ToString();
-                            if (ops.Contains(ch2))
+                            if (fun[0] == input[i])
+                            {
+                                isFunction = true;
                                 break;
+                            }
                         }
-                        string sub = input.Substring(i + 1, index - i - 1);
-                        double exp = ParseMath(null, sub, null);
-                        double newVal = double.Parse(stack) * Math.Pow(10, exp);
-                        currentVal = DoMath(currentVal, lastOp, newVal.ToString());
-                        stack = "0";
-                        lastOp = "+";
-                        i = index - 1;
                     }
-                    else if (ch == "(")
+
+                    if (isOp)
                     {
-                        int j = FindEndParenthesis(input, i)[0];
-                        string sub = input.Substring(i + 1, j - i - 1);
-                        string val = ParseMath(null, sub, null).ToString();
-                        input = input.Substring(0, i) + val + input.Substring(j + 1);
-                        --i;
+                        if (ch == "-" && (stack.Trim() == ""))
+                        {
+                            stack += ch;
+                        }
+                        else if (ch == "e" || ch == "E")
+                        {
+                            int index;
+                            for (index = i + 2; index < input.Length; ++index)
+                            {
+                                string ch2 = input[index].ToString();
+                                if (ops.Contains(ch2))
+                                    break;
+                            }
+                            string sub = input.Substring(i + 1, index - i - 1);
+                            double exp = ParseMath(null, sub, null);
+                            double newVal = double.Parse(stack) * Math.Pow(10, exp);
+                            currentVal = DoMath(currentVal, lastOp, newVal.ToString());
+                            stack = "0";
+                            lastOp = "+";
+                            i = index - 1;
+                        }
+                        else if (ch == "(")
+                        {
+                            int j = FindEndParenthesis(input, i)[0];
+                            string sub = input.Substring(i + 1, j - i - 1);
+                            string val = ParseMath(null, sub, null).ToString();
+                            input = input.Substring(0, i) + val + input.Substring(j + 1);
+                            --i;
+                        }
+                        else
+                        {
+                            currentVal = DoMath(currentVal, lastOp, stack);
+                            lastOp = ch;
+                            stack = "";
+                        }
+                    }
+                    else if (isFunction)
+                    {
+                        int subStart = input.IndexOf('(', i) + 1;
+                        string function = input.Substring(i, subStart - i - 1);
+                        int[] parenComma = FindEndParenthesis(input, subStart - 1);
+                        int j = parenComma[0];
+                        int comma = parenComma[1];
+                        string sub = input.Substring(subStart, j - subStart);
+                        double val = 0.0;
+
+                        if (function == "if")
+                        {
+                            val = DoIfStatement(sub);
+                        }
+                        else if (function == "l" || function == "ln")
+                        {
+                            val = ParseMath(null, sub, null);
+                            val = Math.Log(val);
+                        }
+                        else if (function == "L" || function == "log")
+                        {
+                            val = ParseMath(null, sub, null);
+                            val = Math.Log10(val);
+                        }
+                        else if (function == "max" || function == "min")
+                        {
+                            string[] parts = new string[2];
+                            parts[0] = input.Substring(subStart, comma - subStart);
+                            parts[1] = input.Substring(comma + 1, j - comma - 1);
+                            double sub1 = ParseMath(null, parts[0], null);
+                            double sub2 = ParseMath(null, parts[1], null);
+                            if (function == "max")
+                                val = Math.Max(sub1, sub2);
+                            else if (function == "min")
+                                val = Math.Min(sub1, sub2);
+                        }
+                        else if (function == "sign")
+                        {
+                            val = ParseMath(null, sub, null);
+                            if (val >= 0)
+                                val = 1;
+                            else
+                                val = -1;
+                        }
+                        else if (function == "abs")
+                        {
+                            val = ParseMath(null, sub, null);
+                            val = Math.Abs(val);
+                        }
+
+                        input = input.Substring(0, i) + val.ToString() + input.Substring(j + 1);
+                        i--;
                     }
                     else
                     {
-                        currentVal = DoMath(currentVal, lastOp, stack);
-                        lastOp = ch;
-                        stack = "";
+                        stack += ch;
                     }
                 }
-                else if (isFunction)
-                {
-                    int subStart = input.IndexOf('(', i) + 1;
-                    string function = input.Substring(i, subStart - i - 1);
-                    int[] parenComma = FindEndParenthesis(input, subStart - 1);
-                    int j = parenComma[0];
-                    int comma = parenComma[1];
-                    string sub = input.Substring(subStart, j - subStart);
-                    double val = 0.0;
-
-                    if (function == "if")
-                    {
-                        val = DoIfStatement(sub);
-                    }
-                    else if (function == "l" || function == "ln")
-                    {
-                        val = ParseMath(null, sub, null);
-                        val = Math.Log(val);
-                    }
-                    else if (function == "L" || function == "log")
-                    {
-                        val = ParseMath(null, sub, null);
-                        val = Math.Log10(val);
-                    }
-                    else if (function == "max" || function == "min")
-                    {
-                        string[] parts = new string[2];
-                        parts[0] = input.Substring(subStart, comma - subStart);
-                        parts[1] = input.Substring(comma + 1, j - comma - 1);
-                        double sub1 = ParseMath(null, parts[0], null);
-                        double sub2 = ParseMath(null, parts[1], null);
-                        if (function == "max")
-                            val = Math.Max(sub1, sub2);
-                        else if (function == "min")
-                            val = Math.Min(sub1, sub2);
-                    }
-                    else if (function == "sign")
-                    {
-                        val = ParseMath(null, sub, null);
-                        if (val >= 0)
-                            val = 1;
-                        else
-                            val = -1;
-                    }
-                    else if (function == "abs")
-                    {
-                        val = ParseMath(null, sub, null);
-                        val = Math.Abs(val);
-                    }
-
-                    input = input.Substring(0, i) + val.ToString() + input.Substring(j + 1);
-                    i--;
-                }
-                else
-                {
-                    stack += ch;
-                }
+                currentVal = DoMath(currentVal, lastOp, stack);
             }
-            currentVal = DoMath(currentVal, lastOp, stack);
+            catch (Exception ex)
+            {
+                MagiCore.LogException(ex, string.Format("Exception encountered while parsing '{0}'. Current value: '{1}' Stack: {2}", input, currentVal, stack));
+                currentVal = 0;
+            }
             return currentVal;
         }
 
@@ -257,78 +265,85 @@ namespace MagiCore
             string[] conditionals = mathConditionals.Concat(stringConditionals).ToArray();
             double val = 0.0;
 
-           // Debug.Log("MagiCore: Statement = " + statement);
-
-            int indexOfQMark = statement.IndexOf("?");
-            string conditionalSection = statement.Substring(0, indexOfQMark);
-            //string[] condSides = conditionalSection.Split(conditionals, StringSplitOptions.RemoveEmptyEntries);
-            foreach (string conditional in conditionals)
-                conditionalSection = conditionalSection.Replace(conditional, ";" + conditional + ";");
-            string[] parts = conditionalSection.Split(';');
-            //this is a kind of horrible method that I got from here, but avoided excessive regex: http://stackoverflow.com/a/2484982
-            
-            //lets assume there are only three elements
-            if (parts.Length < 3)
-                return 0.0;
-
-            //check that we aren't doing string comparisons, if so then we don't parse math on val1 or val2
-
-            string condition = parts[1].Trim();
-            double val1 = 0;
-            double val2 = 0;
-
-            string val1S = parts[0].Trim();
-            string val2S = parts[1].Trim();
-
-            if (mathConditionals.Contains(condition))
+            try
             {
-                //do math on part one
-                //do math on part two
-                //compare them
-                val1 = ParseMath(null, parts[0], null);
-                val2 = ParseMath(null, parts[2], null);
-            }
-           // Debug.Log("MagiCore: val1 = " + val1);
-           // Debug.Log("MagiCore: val2 = " + val2);
+                // Debug.Log("MagiCore: Statement = " + statement);
 
-            int indexOfColon = indexOfQMark;
-            int depth = 0;
-            for (int i = indexOfQMark + 1; i < statement.Length; i++)
+                int indexOfQMark = statement.IndexOf("?");
+                string conditionalSection = statement.Substring(0, indexOfQMark);
+                //string[] condSides = conditionalSection.Split(conditionals, StringSplitOptions.RemoveEmptyEntries);
+                foreach (string conditional in conditionals)
+                    conditionalSection = conditionalSection.Replace(conditional, ";" + conditional + ";");
+                string[] parts = conditionalSection.Split(';');
+                //this is a kind of horrible method that I got from here, but avoided excessive regex: http://stackoverflow.com/a/2484982
+
+                //lets assume there are only three elements
+                if (parts.Length < 3)
+                    return 0.0;
+
+                //check that we aren't doing string comparisons, if so then we don't parse math on val1 or val2
+
+                string condition = parts[1].Trim();
+                double val1 = 0;
+                double val2 = 0;
+
+                string val1S = parts[0].Trim();
+                string val2S = parts[1].Trim();
+
+                if (mathConditionals.Contains(condition))
+                {
+                    //do math on part one
+                    //do math on part two
+                    //compare them
+                    val1 = ParseMath(null, parts[0], null);
+                    val2 = ParseMath(null, parts[2], null);
+                }
+                // Debug.Log("MagiCore: val1 = " + val1);
+                // Debug.Log("MagiCore: val2 = " + val2);
+
+                int indexOfColon = indexOfQMark;
+                int depth = 0;
+                for (int i = indexOfQMark + 1; i < statement.Length; i++)
+                {
+                    char s = statement[i];
+                    if (s == '(') depth++;
+                    if (s == ')') depth--;
+
+                    if (s == ':' && depth == 0)
+                        indexOfColon = i;
+
+                    if (depth < 0)
+                        break;
+                }
+
+                string leftOption = statement.Substring(indexOfQMark + 1, indexOfColon - indexOfQMark - 1);//starts at "?" and ends at last ":" for this depth
+                string rightOption = statement.Substring(indexOfColon + 1); //starts at last ":" and ends at end of statment
+
+                // Debug.Log("MagiCore: left option = " + leftOption);
+                // Debug.Log("MagiCore: right option = " + rightOption);
+
+                string selectedOption = "";
+
+                switch (condition)
+                {
+                    case "<": selectedOption = val1 < val2 ? leftOption : rightOption; break;
+                    case ">": selectedOption = val1 > val2 ? leftOption : rightOption; break;
+                    case "<=": selectedOption = val1 <= val2 ? leftOption : rightOption; break;
+                    case ">=": selectedOption = val1 >= val2 ? leftOption : rightOption; break;
+                    case "==": selectedOption = val1 == val2 ? leftOption : rightOption; break;
+                    case "!=": selectedOption = val1 != val2 ? leftOption : rightOption; break;
+                    case "seq": selectedOption = string.Equals(val1S, val2S, StringComparison.Ordinal) ? leftOption : rightOption; break;
+                    case "sneq": selectedOption = !string.Equals(val1S, val2S, StringComparison.Ordinal) ? leftOption : rightOption; break;
+                    default: selectedOption = leftOption; break;
+                }
+
+                val = ParseMath(null, selectedOption, null);
+            }
+            catch (Exception ex)
             {
-                char s = statement[i];
-                if (s == '(') depth++;
-                if (s == ')') depth--;
-
-                if (s == ':' && depth == 0)
-                    indexOfColon = i;
-
-                if (depth < 0)
-                    break;
+                MagiCore.LogException(ex, string.Format("Exception while performing if statement. Statement: '{1}'", statement));
+                val = 0;
             }
-
-            string leftOption = statement.Substring(indexOfQMark + 1, indexOfColon - indexOfQMark - 1);//starts at "?" and ends at last ":" for this depth
-            string rightOption = statement.Substring(indexOfColon + 1); //starts at last ":" and ends at end of statment
-
-           // Debug.Log("MagiCore: left option = " + leftOption);
-           // Debug.Log("MagiCore: right option = " + rightOption);
-
-            string selectedOption = "";
-
-            switch (condition)
-            {
-                case "<": selectedOption = val1 < val2 ? leftOption : rightOption; break;
-                case ">": selectedOption = val1 > val2 ? leftOption : rightOption; break;
-                case "<=": selectedOption = val1 <= val2 ? leftOption : rightOption; break;
-                case ">=": selectedOption = val1 >= val2 ? leftOption : rightOption; break;
-                case "==": selectedOption = val1 == val2 ? leftOption : rightOption; break;
-                case "!=": selectedOption = val1 != val2 ? leftOption : rightOption; break;
-                case "seq": selectedOption = string.Equals(val1S, val2S, StringComparison.Ordinal) ? leftOption : rightOption; break;
-                case "sneq": selectedOption = !string.Equals(val1S, val2S, StringComparison.Ordinal) ? leftOption : rightOption; break;
-                default: selectedOption = leftOption; break;
-            }
-
-            val = ParseMath(null, selectedOption, null);
-
             return val;
         }
     }
