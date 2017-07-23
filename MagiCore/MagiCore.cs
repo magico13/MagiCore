@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -9,7 +10,7 @@ namespace MagiCore
     {
         public static Version GetVersion()
         {
-            return new Version(1, 2, 5, 0);
+            return new Version(System.Diagnostics.FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion);
         }
 
         internal static void Log(object msg)

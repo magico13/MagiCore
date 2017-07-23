@@ -7,6 +7,9 @@ namespace MagiCore
 {
     public class MathParsing
     {
+        private static Dictionary<string, double> formulaCache = new Dictionary<string, double>();
+
+
         /// <summary>
         /// Replace all instances of variables with their provided values
         /// </summary>
@@ -51,6 +54,7 @@ namespace MagiCore
         /// <returns>The result of the evaluation</returns>
         public static double ParseMath(string identifier, string input, Dictionary<string, string> variables)
         {
+            string inputBackup = input;
             double currentVal = 0;
             string stack = "";
             try
@@ -58,7 +62,17 @@ namespace MagiCore
                 if (identifier != null) //recursive calls will pass null to avoid firing the events
                 {
                     input = ReplaceMathVariables(identifier, input, variables);
+
+                    inputBackup = input;
+
+                    //check for a cached value, if found then return the cached value
+                    if (formulaCache.TryGetValue(inputBackup, out currentVal))
+                    {
+                        return currentVal;
+                    }
                 }
+
+                //No cached value, compute it
                 
                 string lastOp = "+";
                 string[] ops = { "+", "-", "*", "/", "%", "^", "(", "e", "E" };
@@ -184,6 +198,12 @@ namespace MagiCore
                     }
                 }
                 currentVal = DoMath(currentVal, lastOp, stack);
+
+                //cache the result so we can avoid computing it in the future
+                if (identifier != null)
+                {
+                    formulaCache[inputBackup] = currentVal;
+                }
             }
             catch (Exception ex)
             {
