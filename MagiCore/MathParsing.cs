@@ -36,10 +36,10 @@ namespace MagiCore
                 }
 
                 //we also replace "true" and "false" with 1 and 0, but only if they are the word by themselves
-                Regex trueReplace = new Regex(@"\btrue\b");
+                Regex trueReplace = new Regex(@"(?i)\btrue\b");
                 cpy = trueReplace.Replace(cpy, variables["true"]);
 
-                Regex falseReplace = new Regex(@"\bfalse\b");
+                Regex falseReplace = new Regex(@"(?i)\bfalse\b");
                 cpy = falseReplace.Replace(cpy, variables["false"]);
             }
             return cpy;
